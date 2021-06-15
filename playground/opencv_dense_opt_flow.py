@@ -14,13 +14,16 @@ import numpy as np
 from utils.util import project_path
 import os
 
-cap = cv2.VideoCapture(0)
-# cap = cv2.VideoCapture(os.path.join(project_path, 'data/vtest.avi'))
+# cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(os.path.join(project_path, 'data/vtest.avi'))
 
 ret, frame1 = cap.read()
 prvs = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
 hsv = np.zeros_like(frame1)
 hsv[..., 1] = 255
+
+height, width, channels = frame1.shape
+video_flow = cv2.VideoWriter(os.path.join(project_path, 'imgs/flow.avi'), cv2.VideoWriter_fourcc(*'MJPG'), 10, (width, height))
 
 while True:
     ret, frame2 = cap.read()
@@ -42,7 +45,9 @@ while True:
         cv2.imwrite(os.path.join(project_path,'imgs/opticalfb.png'), frame2)
         cv2.imwrite(os.path.join(project_path,'imgs/opticalhsv.png'), rgb)
 
+    video_flow.write(rgb)
     prvs = nxt
 
 cap.release()
+video_flow.release()
 cv2.destroyAllWindows()

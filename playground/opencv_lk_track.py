@@ -27,10 +27,15 @@ import os
 import cv2
 import numpy as np
 
-from utils.util import project_path
+from utils.util import project_path, ensure_dir
 
-cap = cv2.VideoCapture(0)
+# cap = cv2.VideoCapture(0)
 # cap = cv2.VideoCapture(os.path.join(project_path, 'data/slow.flv'))
+cap = cv2.VideoCapture(os.path.join(project_path, './imgs/sintel-kittimodel/training-final-ambush_6/0_img.avi'))
+# cap = cv2.VideoCapture(os.path.join(project_path, './data/tmp/out.mp4'))
+
+save_dir = os.path.join(project_path, "imgs/lk")
+ensure_dir(save_dir)
 
 # params for ShiTomasi corner detection
 feature_params = dict(
@@ -56,12 +61,20 @@ p0 = cv2.goodFeaturesToTrack(old_gray, mask=None, **feature_params)
 # Create a mask image for drawing purposes
 mask = np.zeros_like(old_frame)
 
+frame_i = 0
 while 1:
+    frame_i += 1
     ret, frame = cap.read()
     frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # Calculate optical flow
     p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
+
+    # Save the first pic with circles
+    if frame_i == 1:
+        for i, (a, b) in enumerate(p0[st == 1]):
+            old_frame = cv2.circle(old_frame, (a, b), 5, color[i].tolist(), -1)
+        cv2.imwrite(os.path.join(save_dir, f"0.png"), old_frame)
 
     if p1 is not None:
         # Select good points
@@ -78,6 +91,7 @@ while 1:
     img = cv2.add(frame, mask)
 
     cv2.imshow('frame', img)
+    cv2.imwrite(os.path.join(save_dir, f"{frame_i}.png"), img)
     k = cv2.waitKey(30) & 0xff
     if k == 27:
         break
